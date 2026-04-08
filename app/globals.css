@@ -1,0 +1,96 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-text-primary font-sans antialiased;
+  }
+}
+
+@layer components {
+  /* Button styles */
+  .btn {
+    @apply px-4 py-2 rounded font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+
+  .btn-primary {
+    @apply bg-interactive-primary text-white hover:bg-blue-700 focus:ring-interactive-primary;
+  }
+
+  .btn-secondary {
+    @apply bg-interactive-secondary text-white hover:bg-gray-800 focus:ring-interactive-secondary;
+  }
+
+  .btn-danger {
+    @apply bg-interactive-danger text-white hover:bg-red-700 focus:ring-interactive-danger;
+  }
+
+  .btn-ghost {
+    @apply bg-transparent text-text-primary hover:bg-ui-01 focus:ring-ui-03;
+  }
+
+  /* Card styles */
+  .card {
+    @apply bg-ui-background border border-ui-03 rounded-lg p-6 shadow-sm;
+  }
+
+  /* Input styles */
+  .input {
+    @apply w-full px-4 py-2 border border-ui-03 rounded bg-ui-background text-text-primary placeholder-text-disabled focus:outline-none focus:ring-2 focus:ring-interactive-primary focus:border-transparent;
+  }
+
+  .textarea {
+    @apply w-full px-4 py-2 border border-ui-03 rounded bg-ui-background text-text-primary placeholder-text-disabled focus:outline-none focus:ring-2 focus:ring-interactive-primary focus:border-transparent resize-none;
+  }
+
+  /* Table styles */
+  .table {
+    @apply w-full border-collapse;
+  }
+
+  .table thead {
+    @apply bg-ui-01 border-b-2 border-ui-03;
+  }
+
+  .table th {
+    @apply px-4 py-3 text-left text-sm font-semibold text-text-primary;
+  }
+
+  .table td {
+    @apply px-4 py-3 text-sm text-text-primary border-b border-ui-03;
+  }
+
+  .table tbody tr:hover {
+    @apply bg-ui-01;
+  }
+
+  /* Status badges */
+  .badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+  }
+
+  .badge-pending {
+    @apply bg-yellow-100 text-yellow-800;
+  }
+
+  .badge-approved {
+    @apply bg-green-100 text-green-800;
+  }
+
+  .badge-rejected {
+    @apply bg-red-100 text-red-800;
+  }
+
+  .badge-cancelled {
+    @apply bg-gray-100 text-gray-800;
+  }
+}
+
+/* Made with Bob */

@@ -1,0 +1,57 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum ReservationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model User {
+  id           String        @id @default(cuid())
+  name         String
+  email        String        @default("luisglez.pruebas@gmail.com")
+  role         Role          @default(USER)
+  color        String        // Hex color for calendar display
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  reservations Reservation[]
+
+  @@map("users")
+}
+
+model Reservation {
+  id           String            @id @default(cuid())
+  userId       String
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  checkIn      DateTime
+  checkOut     DateTime
+  guests       Int               @default(1)
+  notes        String?
+  status       ReservationStatus @default(PENDING)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  reviewedAt   DateTime?
+  reviewedBy   String?
+  adminComment String?           // Comment from admin when approving/rejecting
+
+  @@index([userId])
+  @@index([status])
+  @@index([checkIn, checkOut])
+  @@map("reservations")
+}
