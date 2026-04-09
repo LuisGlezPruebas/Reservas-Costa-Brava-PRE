@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { doRangesOverlap } from '@/lib/utils';
 import { sendNewRequestEmail, sendApprovedEmail, sendRejectedEmail } from '@/lib/email';
+import { createReservationSchema, updateReservationSchema, reservationIdSchema, adminActionSchema, validateData } from '@/lib/validations';
+import { requireAuth, requireAdmin } from '@/lib/auth';
 
 const MAX_GUESTS = 10;
 
@@ -15,9 +17,19 @@ export async function createReservation(data: {
   notes?: string;
 }) {
   try {
+    // Validate input data
+    const validation = validateData(createReservationSchema, data);
+    if (!validation.success) {
+      return {
+        success: false,
+        error: validation.error,
+      };
+    }
+
+    const validatedData = validation.data;
     // Validate dates
-    const checkIn = new Date(data.checkIn);
-    const checkOut = new Date(data.checkOut);
+    const checkIn = new Date(validatedData.checkIn);
+    const checkOut = new Date(validatedData.checkOut);
 
     if (checkOut <= checkIn) {
       return {
@@ -93,11 +105,11 @@ export async function createReservation(data: {
     // Create reservation
     const reservation = await prisma.reservation.create({
       data: {
-        userId: data.userId,
+        userId: validatedData.userId,
         checkIn,
         checkOut,
-        guests: data.guests,
-        notes: data.notes,
+        guests: validatedData.guests,
+        notes: validatedData.notes,
         status: 'PENDING',
       },
       include: {
@@ -304,8 +316,22 @@ export async function cancelReservation(id: string) {
 
 export async function approveReservation(id: string, adminId: string, adminComment?: string) {
   try {
+    // Require admin authentication
+    await requireAdmin();
+
+    // Validate input
+    const validation = validateData(adminActionSchema, { id, adminId, adminComment });
+    if (!validation.success) {
+      return {
+        success: false,
+        error: validation.error,
+      };
+    }
+
+    const { id: validId, adminId: validAdminId, adminComment: validComment } = validation.data;
+
     const reservation = await prisma.reservation.findUnique({
-      where: { id },
+      where: { id: validId },
     });
 
     if (!reservation) {
@@ -353,12 +379,12 @@ export async function approveReservation(id: string, adminId: string, adminComme
     }
 
     const updatedReservation = await prisma.reservation.update({
-      where: { id },
+      where: { id: validId },
       data: {
         status: 'APPROVED',
         reviewedAt: new Date(),
-        reviewedBy: adminId,
-        adminComment: adminComment || null,
+        reviewedBy: validAdminId,
+        adminComment: validComment || null,
       },
       include: {
         user: true,
@@ -398,8 +424,22 @@ export async function approveReservation(id: string, adminId: string, adminComme
 
 export async function rejectReservation(id: string, adminId: string, adminComment?: string) {
   try {
+    // Require admin authentication
+    await requireAdmin();
+
+    // Validate input
+    const validation = validateData(adminActionSchema, { id, adminId, adminComment });
+    if (!validation.success) {
+      return {
+        success: false,
+        error: validation.error,
+      };
+    }
+
+    const { id: validId, adminId: validAdminId, adminComment: validComment } = validation.data;
+
     const reservation = await prisma.reservation.findUnique({
-      where: { id },
+      where: { id: validId },
     });
 
     if (!reservation) {
@@ -417,12 +457,12 @@ export async function rejectReservation(id: string, adminId: string, adminCommen
     }
 
     const updatedReservation = await prisma.reservation.update({
-      where: { id },
+      where: { id: validId },
       data: {
         status: 'REJECTED',
         reviewedAt: new Date(),
-        reviewedBy: adminId,
-        adminComment: adminComment && adminComment.trim() ? adminComment.trim() : null,
+        reviewedBy: validAdminId,
+        adminComment: validComment && validComment.trim() ? validComment.trim() : null,
       },
       include: {
         user: true,

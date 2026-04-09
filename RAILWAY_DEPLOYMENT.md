@@ -23,13 +23,24 @@ En Railway, ve a tu proyecto → Variables y agrega:
 **Variables requeridas:**
 ```
 DATABASE_URL=postgresql://postgres:MWKVfpUKecTIDdiAUpeioHJBtEDHVSID@hopper.proxy.rlwy.net:52989/railway
-ADMIN_PASSWORD=123
+ADMIN_PASSWORD=your-secure-password-here
+SESSION_SECRET=your-session-secret-at-least-32-characters-long
 RESEND_API_KEY=re_LcnCdRfF_55qUmyvAxcjfCzfDEvfq3SUS
 EMAIL_FROM=Reservas Costa Brava <onboarding@resend.dev>
 ADMIN_NOTIFICATION_EMAIL=luisglez.pruebas@gmail.com
+NODE_ENV=production
 ```
 
-**IMPORTANTE:** Cambia `ADMIN_PASSWORD` por una contraseña segura antes de producción.
+**Variables opcionales (para rate limiting en producción):**
+```
+UPSTASH_REDIS_REST_URL=your-upstash-redis-url
+UPSTASH_REDIS_REST_TOKEN=your-upstash-redis-token
+```
+
+**IMPORTANTE:**
+- Cambia `ADMIN_PASSWORD` por una contraseña segura (mínimo 12 caracteres)
+- Genera `SESSION_SECRET` con: `openssl rand -base64 32`
+- Para rate limiting en producción, configura Upstash Redis
 
 ### 4. Configuración del Build
 

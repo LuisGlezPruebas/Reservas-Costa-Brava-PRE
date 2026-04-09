@@ -14,15 +14,29 @@ export default function AdminLoginPage() {
     setError('');
     setIsLoading(true);
 
-    // Simple password check (TEMPORARY - NOT SECURE FOR PRODUCTION)
-    const adminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || '123';
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password }),
+      });
 
-    if (password === adminPassword) {
-      // Store admin session (simple approach for MVP)
-      sessionStorage.setItem('admin_authenticated', 'true');
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || 'Error al iniciar sesión');
+        setIsLoading(false);
+        return;
+      }
+
+      // Redirect to admin page
       router.push('/admin');
-    } else {
-      setError('Contraseña incorrecta');
+      router.refresh();
+    } catch (error) {
+      console.error('Login error:', error);
+      setError('Error al conectar con el servidor');
       setIsLoading(false);
     }
   };
@@ -85,14 +99,6 @@ export default function AdminLoginPage() {
               Volver
             </button>
           </form>
-
-          <div className="mt-6 pt-6 border-t border-ui-03">
-            <p className="text-xs text-text-secondary text-center">
-              ⚠️ Contraseña temporal para desarrollo: 123
-              <br />
-              No usar en producción real
-            </p>
-          </div>
         </div>
       </div>
     </div>
