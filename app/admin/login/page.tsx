@@ -14,29 +14,13 @@ export default function AdminLoginPage() {
     setError('');
     setIsLoading(true);
 
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error || 'Error al iniciar sesión');
-        setIsLoading(false);
-        return;
-      }
-
-      // Redirect to admin page
-      router.push('/admin');
-      router.refresh();
-    } catch (error) {
-      console.error('Login error:', error);
-      setError('Error al conectar con el servidor');
+    // Simple password check
+    if (password === '123') {
+      // Store admin session (simple approach)
+      sessionStorage.setItem('admin_authenticated', 'true');
+      window.location.href = '/admin';
+    } else {
+      setError('Contraseña incorrecta');
       setIsLoading(false);
     }
   };
@@ -74,6 +58,7 @@ export default function AdminLoginPage() {
                 placeholder="Introduce la contraseña"
                 required
                 autoFocus
+                disabled={isLoading}
               />
             </div>
 
@@ -95,10 +80,17 @@ export default function AdminLoginPage() {
               type="button"
               onClick={() => router.push('/')}
               className="btn btn-ghost w-full"
+              disabled={isLoading}
             >
               Volver
             </button>
           </form>
+
+          <div className="mt-6 pt-6 border-t border-ui-03">
+            <p className="text-xs text-text-secondary text-center">
+              Contraseña: 123
+            </p>
+          </div>
         </div>
       </div>
     </div>

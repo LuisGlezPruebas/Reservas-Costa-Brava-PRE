@@ -50,10 +50,13 @@ export async function requireAdmin() {
 
 export async function login(password: string): Promise<{ success: boolean; error?: string }> {
   try {
+    console.log("[AUTH] Login attempt started");
+    
     // Get admin user from database
     const admin = await prisma.user.findFirst({
       where: { role: "ADMIN" },
     });
+    console.log("[AUTH] Admin user found:", !!admin);
 
     if (!admin) {
       return { success: false, error: "Configuración incorrecta" };
@@ -61,26 +64,32 @@ export async function login(password: string): Promise<{ success: boolean; error
 
     // Compare password with environment variable
     const adminPassword = process.env.ADMIN_PASSWORD;
+    console.log("[AUTH] Admin password from env:", adminPassword ? "SET" : "NOT SET");
+    
     if (!adminPassword) {
       console.error("ADMIN_PASSWORD not set in environment");
       return { success: false, error: "Configuración incorrecta" };
     }
 
     // Simple password comparison
+    console.log("[AUTH] Comparing passwords");
     if (password !== adminPassword) {
+      console.log("[AUTH] Password mismatch");
       return { success: false, error: "Contraseña incorrecta" };
     }
 
+    console.log("[AUTH] Password correct, creating session");
     // Create session
     const session = await getSession();
     session.userId = admin.id;
     session.role = admin.role;
     session.isLoggedIn = true;
     await session.save();
+    console.log("[AUTH] Session saved successfully");
 
     return { success: true };
   } catch (error) {
-    console.error("Login error:", error);
+    console.error("[AUTH] Login error:", error);
     return { success: false, error: "Error al iniciar sesión" };
   }
 }

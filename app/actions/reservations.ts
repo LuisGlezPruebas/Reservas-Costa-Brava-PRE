@@ -5,7 +5,6 @@ import { revalidatePath } from 'next/cache';
 import { doRangesOverlap } from '@/lib/utils';
 import { sendNewRequestEmail, sendApprovedEmail, sendRejectedEmail } from '@/lib/email';
 import { createReservationSchema, updateReservationSchema, reservationIdSchema, adminActionSchema, validateData } from '@/lib/validations';
-import { requireAuth, requireAdmin } from '@/lib/auth';
 
 const MAX_GUESTS = 10;
 
@@ -316,9 +315,6 @@ export async function cancelReservation(id: string) {
 
 export async function approveReservation(id: string, adminId: string, adminComment?: string) {
   try {
-    // Require admin authentication
-    await requireAdmin();
-
     // Validate input
     const validation = validateData(adminActionSchema, { id, adminId, adminComment });
     if (!validation.success) {
@@ -424,9 +420,6 @@ export async function approveReservation(id: string, adminId: string, adminComme
 
 export async function rejectReservation(id: string, adminId: string, adminComment?: string) {
   try {
-    // Require admin authentication
-    await requireAdmin();
-
     // Validate input
     const validation = validateData(adminActionSchema, { id, adminId, adminComment });
     if (!validation.success) {
