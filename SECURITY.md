@@ -60,9 +60,15 @@ Todos los inputs son validados con Zod:
 - Validación de propiedad de datos
 
 **APIs protegidas:**
-- `/api/users/admin` - Solo admin
-- `/api/users/[id]` - Usuario propio o admin
-- Server Actions - Validación en cada función
+- `/api/users/admin` - Solo admin autenticado
+- `/api/users/[id]` - Acceso público (solo datos no sensibles)
+- Server Actions de admin - Requieren autenticación de admin
+- Server Actions de usuario - Sin autenticación (validación por lógica de negocio)
+
+**Nota:** Las páginas de usuario no requieren autenticación para permitir acceso directo. La seguridad se mantiene mediante:
+- Validación de datos en server actions
+- Usuarios solo pueden modificar sus propias reservas
+- Operaciones de admin protegidas con `requireAdmin()`
 
 ### ✅ 5. Headers de Seguridad
 
