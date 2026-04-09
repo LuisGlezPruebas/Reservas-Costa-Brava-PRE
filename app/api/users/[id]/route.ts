@@ -1,28 +1,25 @@
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-import { requireAuth, getSession } from '@/lib/auth';
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Verify authentication
-    await requireAuth();
-    
     const { id } = await params;
-    const session = await getSession();
     
-    // Users can only access their own data, admins can access any
-    if (session.role !== 'ADMIN' && session.userId !== id) {
-      return NextResponse.json(
-        { error: 'No tienes permiso para acceder a estos datos' },
-        { status: 403 }
-      );
-    }
-
+    // Allow public access to user data
+    // This is needed for users to access their own reservation pages
+    // Sensitive operations are protected in server actions
     const user = await prisma.user.findUnique({
       where: { id },
+      select: {
+        id: true,
+        name: true,
+        color: true,
+        role: true,
+        // Don't expose email to public
+      }
     });
 
     if (!user) {
@@ -33,14 +30,7 @@ export async function GET(
     }
 
     return NextResponse.json(user);
-  } catch (error: any) {
-    if (error.message === 'No autenticado') {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 401 }
-      );
-    }
-    
+  } catch (error) {
     console.error('Error fetching user:', error);
     return NextResponse.json(
       { error: 'Error al obtener usuario' },
