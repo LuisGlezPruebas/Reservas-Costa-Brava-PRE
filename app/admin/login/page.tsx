@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { loginAction } from '@/app/actions/auth';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -14,13 +15,21 @@ export default function AdminLoginPage() {
     setError('');
     setIsLoading(true);
 
-    // Simple password check
-    if (password === '123') {
-      // Store admin session (simple approach)
-      sessionStorage.setItem('admin_authenticated', 'true');
-      window.location.href = '/admin';
-    } else {
-      setError('Contraseña incorrecta');
+    try {
+      // Call server action to validate credentials and create iron-session
+      const result = await loginAction(password);
+      
+      if (result.success) {
+        // Store admin session indicator (optional client-side indicator)
+        sessionStorage.setItem('admin_authenticated', 'true');
+        // Redirect to admin page
+        window.location.href = '/admin';
+      } else {
+        setError(result.error || 'Contraseña incorrecta');
+        setIsLoading(false);
+      }
+    } catch (err) {
+      setError('Error al iniciar sesión');
       setIsLoading(false);
     }
   };
