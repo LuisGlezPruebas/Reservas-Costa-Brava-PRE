@@ -9,6 +9,33 @@ import { requireAdmin } from '@/lib/auth';
 
 const MAX_GUESTS = 10;
 
+// Helper function to calculate maximum guests per day in a date range
+function getMaxGuestsPerDay(
+  checkIn: Date,
+  checkOut: Date,
+  overlappingReservations: Array<{checkIn: Date, checkOut: Date, guests: number}>
+): number {
+  let maxGuests = 0;
+  
+  // Iterate through each day in the requested range
+  const currentDate = new Date(checkIn);
+  while (currentDate <= checkOut) {
+    // Count guests on this specific day
+    const guestsOnThisDay = overlappingReservations
+      .filter(res => {
+        return currentDate >= res.checkIn && currentDate <= res.checkOut;
+      })
+      .reduce((sum, res) => sum + res.guests, 0);
+    
+    maxGuests = Math.max(maxGuests, guestsOnThisDay);
+    
+    // Move to next day
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+  
+  return maxGuests;
+}
+
 export async function createReservation(data: {
   userId: string;
   checkIn: string;
@@ -53,15 +80,12 @@ export async function createReservation(data: {
       },
     });
 
-    // Calculate total guests in overlapping reservations
-    const totalGuestsInRange = overlappingReservations.reduce(
-      (sum, res) => sum + res.guests,
-      0
-    );
+    // Calculate maximum guests per day in overlapping reservations
+    const maxGuestsPerDay = getMaxGuestsPerDay(checkIn, checkOut, overlappingReservations);
 
     // Check if adding this reservation would exceed max capacity
-    if (totalGuestsInRange + data.guests > MAX_GUESTS) {
-      const availableCapacity = MAX_GUESTS - totalGuestsInRange;
+    if (maxGuestsPerDay + data.guests > MAX_GUESTS) {
+      const availableCapacity = MAX_GUESTS - maxGuestsPerDay;
       if (availableCapacity === 0) {
         return {
           success: false,
@@ -89,13 +113,10 @@ export async function createReservation(data: {
       },
     });
 
-    const totalPendingGuests = overlappingPending.reduce(
-      (sum, res) => sum + res.guests,
-      0
-    );
+    const maxPendingGuestsPerDay = getMaxGuestsPerDay(checkIn, checkOut, overlappingPending);
 
-    if (totalGuestsInRange + totalPendingGuests + data.guests > MAX_GUESTS) {
-      const availableCapacity = MAX_GUESTS - totalGuestsInRange - totalPendingGuests;
+    if (maxGuestsPerDay + maxPendingGuestsPerDay + data.guests > MAX_GUESTS) {
+      const availableCapacity = MAX_GUESTS - maxGuestsPerDay - maxPendingGuestsPerDay;
       return {
         success: false,
         error: `Solo hay capacidad para ${availableCapacity} ${availableCapacity === 1 ? 'persona' : 'personas'} en estas fechas (hay solicitudes pendientes)`,
@@ -222,14 +243,11 @@ export async function updateReservation(
       },
     });
 
-    // Calculate total guests in overlapping reservations
-    const totalGuestsInRange = overlappingReservations.reduce(
-      (sum, res) => sum + res.guests,
-      0
-    );
+    // Calculate maximum guests per day in overlapping reservations
+    const maxGuestsPerDay = getMaxGuestsPerDay(checkIn, checkOut, overlappingReservations);
 
-    if (totalGuestsInRange + data.guests > MAX_GUESTS) {
-      const availableCapacity = MAX_GUESTS - totalGuestsInRange;
+    if (maxGuestsPerDay + data.guests > MAX_GUESTS) {
+      const availableCapacity = MAX_GUESTS - maxGuestsPerDay;
       return {
         success: false,
         error: `Solo hay capacidad para ${availableCapacity} ${availableCapacity === 1 ? 'persona' : 'personas'} en estas fechas`,
@@ -364,14 +382,15 @@ export async function approveReservation(id: string, adminId: string, adminComme
       },
     });
 
-    // Calculate total guests in overlapping reservations
-    const totalGuestsInRange = overlappingReservations.reduce(
-      (sum, res) => sum + res.guests,
-      0
+    // Calculate maximum guests per day in overlapping reservations
+    const maxGuestsPerDay = getMaxGuestsPerDay(
+      reservation.checkIn,
+      reservation.checkOut,
+      overlappingReservations
     );
 
-    if (totalGuestsInRange + reservation.guests > MAX_GUESTS) {
-      const availableCapacity = MAX_GUESTS - totalGuestsInRange;
+    if (maxGuestsPerDay + reservation.guests > MAX_GUESTS) {
+      const availableCapacity = MAX_GUESTS - maxGuestsPerDay;
       return {
         success: false,
         error: `No se puede aprobar: solo hay capacidad para ${availableCapacity} ${availableCapacity === 1 ? 'persona' : 'personas'} en estas fechas`,
@@ -580,12 +599,9 @@ export async function getAvailableCapacity(checkIn: string, checkOut: string, ex
       },
     });
 
-    const totalGuests = overlappingReservations.reduce(
-      (sum, res) => sum + res.guests,
-      0
-    );
+    const maxGuestsPerDay = getMaxGuestsPerDay(checkInDate, checkOutDate, overlappingReservations);
 
-    return MAX_GUESTS - totalGuests;
+    return MAX_GUESTS - maxGuestsPerDay;
   } catch (error) {
     console.error('Error getting available capacity:', error);
     return MAX_GUESTS;
